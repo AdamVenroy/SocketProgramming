@@ -102,11 +102,11 @@ def date_text(language_code, day, month, year):
         return f"Heute ist der {day}. {month_text} {year}"
 
 
-def create_and_bind_socket(port, hostname):
+def create_and_bind_socket(port):
     """ Returns UDP IPv4 Server Socket binded on port given"""
     try:
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        server_socket.bind((hostname,port))
+        server_socket.bind(('',port))
     except Exception as e:
         print(e)
         print_error(f"Unable to bind to port {port}", should_exit=True)
@@ -114,24 +114,18 @@ def create_and_bind_socket(port, hostname):
 
 
 
+
 def main():
     arguments = sys.argv[1:]
     ports = check_arguments_and_return_port_list(arguments)
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        hostname = s.getsockname()[0]
-    except Exception as e:
-        print(e)
-        print_error("Unable to get internal ip", True)
-    print(f"Running on internal address {hostname}")
-    list_of_sockets = [create_and_bind_socket(p, hostname) for p in ports]
+    list_of_sockets = [create_and_bind_socket(p) for p in ports]
+    print(list_of_sockets)
     print(f"Sockets successfully created and binded on ports {ports[0]}, {ports[1]} and {ports[2]}.")
     while True:
         print("Waiting for packet(s)...")
-        rlist, _, _ = select.select(list_of_sockets, [], [])
+        readable_list_of_sockets, _, _ = select.select(list_of_sockets, [], [])
         print("Packet(s) received")
-        for s in rlist:
+        for s in readable_list_of_sockets:
             try:
                 packet, address = s.recvfrom(48)
             except OSError as error:
@@ -152,17 +146,6 @@ def main():
                         print_error(f"Sending DT-Response to {address}")
 
 
-
-
-
-
-
-
-
-
-
-            
-        
 
 
 if __name__ == '__main__':
