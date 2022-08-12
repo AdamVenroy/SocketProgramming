@@ -105,8 +105,13 @@ def date_text(language_code, day, month, year):
 def create_and_bind_socket(port):
     """ Returns UDP IPv4 Server Socket binded on port given"""
     try:
+        hostname = socket.getfqdn()
+    except Exception as e:
+        print(e)
+        print_error("Unable to get hostname", True)
+    try:
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        server_socket.bind(('localhost',port))
+        server_socket.bind((hostname,port))
     except Exception as e:
         print(e)
         print_error(f"Unable to bind to port {port}", should_exit=True)
@@ -118,7 +123,7 @@ def main():
     arguments = sys.argv[1:]
     ports = check_arguments_and_return_port_list(arguments)
     list_of_sockets = [create_and_bind_socket(p) for p in ports]
-    print(f"Sockets successfully created and binded on ports {ports[0]}, {ports[1]} and {ports[2]}.")
+    print(f"Sockets successfully created and binded on address {list_of_sockets[0].getsockname()[0]} and on ports {ports[0]}, {ports[1]} and {ports[2]}.")
     while True:
         print("Waiting for packet(s)...")
         rlist, _, _ = select.select(list_of_sockets, [], [])
@@ -128,7 +133,7 @@ def main():
                 packet, address = s.recvfrom(48)
             except OSError as error:
                 print(error)
-                print_error("OS Error. Did packet length exceed buffer of 48 bits?")
+                print_error("OS Error. Did packet length exceed buffer of 48 bits?", False)
             else:
                 port = s.getsockname()[1]
                 print(f"Request received from {address} on port {port}")
