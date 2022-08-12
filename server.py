@@ -118,7 +118,9 @@ def main():
     arguments = sys.argv[1:]
     ports = check_arguments_and_return_port_list(arguments)
     try:
-        hostname = socket.gethostbyname_ex(socket.getfqdn())[2][1]
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        hostname = s.getsockname()[0]
     except Exception as e:
         print(e)
         print_error("Unable to get internal ip", True)
