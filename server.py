@@ -102,14 +102,8 @@ def date_text(language_code, day, month, year):
         return f"Heute ist der {day}. {month_text} {year}"
 
 
-def create_and_bind_socket(port):
+def create_and_bind_socket(port, hostname):
     """ Returns UDP IPv4 Server Socket binded on port given"""
-    try:
-        hostname = socket.getfqdn()
-    except Exception as e:
-        print(e)
-        print_error("Unable to get hostname", True)
-    print(f"Running on host {hostname}")
     try:
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         server_socket.bind((hostname,port))
@@ -123,8 +117,14 @@ def create_and_bind_socket(port):
 def main():
     arguments = sys.argv[1:]
     ports = check_arguments_and_return_port_list(arguments)
-    list_of_sockets = [create_and_bind_socket(p) for p in ports]
-    print(f"Sockets successfully created and binded on address on ports {ports[0]}, {ports[1]} and {ports[2]}.")
+    try:
+        hostname = socket.gethostbyname_ex(socket.getfqdn())[2][1]
+    except Exception as e:
+        print(e)
+        print_error("Unable to get internal ip", True)
+    print(f"Running on internal address {hostname}")
+    list_of_sockets = [create_and_bind_socket(p, hostname) for p in ports]
+    print(f"Sockets successfully created and binded on ports {ports[0]}, {ports[1]} and {ports[2]}.")
     while True:
         print("Waiting for packet(s)...")
         rlist, _, _ = select.select(list_of_sockets, [], [])
