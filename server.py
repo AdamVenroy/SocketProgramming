@@ -24,19 +24,21 @@ MONTHS = {
 
 
 def check_arguments_and_return_port_list(arguments):
-    """ Checks if the arguments given are valid port numbers. If they are, returns a list of ports.
-    Otherwise prints an error and exits.
+    """ Checks if the arguments given are valid port numbers. 
+    If they are, returns a list of ports. Otherwise prints an error and exits.
     """
     if len(arguments) != 3:
-        print_error("Error: Please enter three ports.", True)
+        print_error("Please enter three ports.", True)
 
     try:
         ports = [int(i) for i in arguments]
     except ValueError:
-        print_error("Error: Please enter integers between 1024 and 64000 for ports", True)
+        print_error("Please enter integers between 1024 and 64000 for ports", 
+        True)
 
     if len(ports) != len(set(ports)):
-        print_error("Error: Please enter three unique values for the ports", True)
+        print_error("Please enter three unique values for the ports", 
+        True)
 
     for p in ports:
         check_port(p)
@@ -46,7 +48,8 @@ def check_arguments_and_return_port_list(arguments):
 
 
 def create_dt_reponse(language_code, request_type):
-    """Creates a DT-Response packet. Text is determined on the language_code and request_type"""
+    """Creates a DT-Response packet. Text is determined on the 
+    language_code and request_type"""
     today = datetime.datetime.today()
     year = today.year
     month = today.month
@@ -82,6 +85,41 @@ def create_dt_reponse(language_code, request_type):
     
     return packet
 
+def check_dt_request_packet(data, should_exit=False, print_data=False):
+    """Checks DT-Request packet is valid. If print_data is true, 
+    it will print the packet info. 
+    If exit is true, the program will exit upon detecting an error. 
+    """
+    if len(data) != 6:
+        print_error("Data is not 6 bytes", should_exit)
+        return False
+    magic_number = (data[0] << 8) + data[1]
+    packet_type = (data[2] << 8) + data[3]
+    request_type = (data[4] << 8) + data[5]
+    print("Checking DT-Request packet...")
+    if magic_number != 0x497E:
+        print_error(f"Magic number does not equal 0x497E and "+
+        "instead equals {hex(magic_number)}", should_exit)
+        return False
+    if packet_type != 0x0001:
+        print_error(f"Packet Type does not equal 0x0002 and " + 
+        "instead equals {hex(packet_type)}", should_exit)
+        return False
+    if request_type != 1 and request_type != 2:
+        print_error(f"Request Type does not equal 0x0001 or 0x0002 and " + 
+        "instead equals {hex(request_type)}", should_exit)
+        return False
+    
+    print("Checks passed")
+
+    if print_data:
+        print(f"Magic Number: {hex(magic_number)}")
+        print(f"Packet Type: {packet_type}")
+        print(f"Request Type: {request_type}")
+
+    return True
+
+
 
 def time_text(language_code, hour, minute):
     if language_code == 1:
@@ -113,14 +151,12 @@ def create_and_bind_socket(port):
     return server_socket
 
 
-
-
 def main():
     arguments = sys.argv[1:]
     ports = check_arguments_and_return_port_list(arguments)
     list_of_sockets = [create_and_bind_socket(p) for p in ports]
-    print(list_of_sockets)
-    print(f"Sockets successfully created and binded on ports {ports[0]}, {ports[1]} and {ports[2]}.")
+    print(f"Sockets successfully created and binded on "+
+    "ports {ports[0]}, {ports[1]} and {ports[2]}.")
     while True:
         print("Waiting for packet(s)...")
         readable_list_of_sockets, _, _ = select.select(list_of_sockets, [], [])
@@ -130,23 +166,22 @@ def main():
                 packet, address = s.recvfrom(48)
             except OSError as error:
                 print(error)
-                print_error("OS Error. Did packet length exceed buffer of 48 bits?", False)
+                print_error("OS Error."+
+                "Did packet length exceed buffer of 48 bits?", False)
             else:
                 port = s.getsockname()[1]
                 print(f"Request received from {address} on port {port}")
                 if check_dt_request_packet(packet):
                     language_code = ports.index(port) + 1
                     request_type = (packet[4] << 8) + packet[5]
-                    response_packet = create_dt_reponse(language_code, request_type)
+                    response_packet = create_dt_reponse(language_code, 
+                    request_type)
                     print(f"Sending DT-Response packet to {address}")
                     try:
                         s.sendto(response_packet, address)
                     except Exception as e:
                         print(e)
                         print_error(f"Sending DT-Response to {address}")
-
-
-
 
 if __name__ == '__main__':
     main()
