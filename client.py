@@ -2,21 +2,35 @@
 
 import sys
 import socket
-from server_and_client_functions import *
+from server_and_client import *
 
+MIN_LANGUAGE_CODE = 1
+MAX_LANGUAGE_CODE = 3
+MAX_YEAR = 2100
+MIN_MONTH = 1
+MAX_MONTH = 12
+MIN_DAY = 1
+MAX_DAY = 31
+MIN_HOUR = 0
+MAX_HOUR = 23
+MIN_MINUTE = 0
+MAX_MINUTE = 59
+HEADER_LENGTH = 13
+LEN_ARGUMENTS = 3
+BUFFER = 70
 
 def create_dt_request(request_type):
     """Return byte """
     packet = bytearray(6)
-    packet[0] = 0x49
-    packet[1] = 0x7E
-    packet[2] = 0x00
-    packet[3] = 0x01
-    packet[4] = 0x00
+    packet[0] = MAGIC_NUMBER_NIBBLE_1
+    packet[1] = MAGIC_NUMBER_NIBBLE_2
+    packet[2] = ZERO_BYTE
+    packet[3] = REQUEST_PACKET_TYPE
+    packet[4] = ZERO_BYTE
     if request_type == "date":
-        packet[5] = 0x01
+        packet[5] = DATE_REQUEST
     elif request_type == "time":
-        packet[5] = 0x02
+        packet[5] = TIME_REQUEST
     return packet
     
 def check_dt_response_packet(data, should_exit=False, print_data=False):
@@ -36,39 +50,39 @@ def check_dt_response_packet(data, should_exit=False, print_data=False):
     length = data[12]
     text = data[13:].decode("utf-8")
     print("Checking DT-Response packet...")
-    if magic_number != 0x497E:
+    if magic_number != MAGIC_NUMBER:
         print_error(f"Magic number does not equal 0x497E and "+
-        "instead equals {hex(magic_number)}", should_exit)
+        f"instead equals {hex(magic_number)}", should_exit)
         return False
-    if packet_type != 0x0002:
+    if packet_type != RESPONSE_PACKET_TYPE:
         print_error(f"Packet Type does not equal 0x0002 and "+
         "instead equals {hex(packet_type)}", should_exit)
         return False
-    if not(1 <= language_code <= 3):
+    if not(MIN_LANGUAGE_CODE <= language_code <= MAX_LANGUAGE_CODE):
         print_error(f"Language code does not equal 0x001, 0x002 or 0x003 and "+
          "instead equals {hex(language_code)}", should_exit)
         return False
-    if year >= 2100:
+    if year >= MAX_YEAR:
         print_error(f"Year is not below 2100 as year equals {year}", 
         should_exit)
         return False
-    if not(1 <= month <= 12):
+    if not(MIN_MONTH <= month <= MAX_MONTH):
         print_error(f"Month is not between 1 and 12 as month equals {month}", 
         should_exit)
         return False
-    if not(1 <= day <= 31):
+    if not(MIN_DAY <= day <= MAX_DAY):
         print_error(f"Day is not between 1 and 31 as day equals {day}", 
         should_exit)
         return False
-    if not(0 <= hour <= 23):
+    if not(MIN_HOUR <= hour <= MAX_HOUR):
         print_error(f"Hour is not between 0 and 23 as hour equals {hour}", 
         should_exit)
         return False
-    if not(0 <= minute <= 59):
+    if not(MIN_MINUTE <= minute <= MAX_MINUTE):
         print_error(f"Minute is not between 0 and 59 as minute equals {minute}", 
         should_exit)
         return False
-    if not(len(data) == 13 + length):
+    if not(len(data) == HEADER_LENGTH + length):
         print_error(f"Invalid length, packet length = {len(data)}, "+
         "length in header + header length = {length + 13}", should_exit)
         return False
@@ -91,7 +105,7 @@ def check_dt_response_packet(data, should_exit=False, print_data=False):
 def main():
     args = sys.argv[1:]
 
-    if len(args) != 3:
+    if len(args) != LEN_ARGUMENTS:
         print_error("Please enter three arguments - "+
         "(request_type, address, port).", True)
     if args[0] != "date" and args[0] != "time":
@@ -122,11 +136,10 @@ def main():
         print("Failed to packet to address")
         print_error(e, True)
 
-    print("Packet sent successfully")
     print("Waiting for response packet...")
 
     try:
-        packet = server_socket.recvfrom(70)[0]
+        packet = server_socket.recvfrom(BUFFER)[0]
     except TimeoutError:
         print_error("Timeout. Is a server running at the address and port? "+
         "Is there a serverside error?", True)

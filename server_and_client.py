@@ -1,4 +1,13 @@
-"""Functions that both the server and client need"""
+"""Functions and constants that both the server and client need"""
+ZERO_BYTE = 0x00
+MAGIC_NUMBER = 0x497E
+MAGIC_NUMBER_NIBBLE_1 = 0x49
+MAGIC_NUMBER_NIBBLE_2 = 0x7E
+REQUEST_PACKET_TYPE = 0x01
+DATE_REQUEST = 0x01
+TIME_REQUEST = 0x02
+RESPONSE_PACKET_TYPE = 0x02
+
 
 def check_port(p):
     """Exits program if p is not between 1024 and 6400-"""
