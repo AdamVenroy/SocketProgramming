@@ -163,7 +163,7 @@ def main():
     arguments = sys.argv[1:]
     ports = check_arguments_and_return_port_list(arguments)
     list_of_sockets = [create_and_bind_socket(p) for p in ports]
-    print(f"Sockets successfully created and binded on "+
+    print("Sockets successfully created and binded on "+
     f"ports {ports[0]}, {ports[1]} and {ports[2]}.")
     while True:
         print("Waiting for packet(s)...")

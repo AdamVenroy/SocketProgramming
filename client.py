@@ -51,16 +51,16 @@ def check_dt_response_packet(data, should_exit=False, print_data=False):
     text = data[13:].decode("utf-8")
     print("Checking DT-Response packet...")
     if magic_number != MAGIC_NUMBER:
-        print_error(f"Magic number does not equal 0x497E and "+
+        print_error("Magic number does not equal 0x497E and "+
         f"instead equals {hex(magic_number)}", should_exit)
         return False
     if packet_type != RESPONSE_PACKET_TYPE:
-        print_error(f"Packet Type does not equal 0x0002 and "+
-        "instead equals {hex(packet_type)}", should_exit)
+        print_error("Packet Type does not equal 0x0002 and "+
+        f"instead equals {hex(packet_type)}", should_exit)
         return False
     if not(MIN_LANGUAGE_CODE <= language_code <= MAX_LANGUAGE_CODE):
-        print_error(f"Language code does not equal 0x001, 0x002 or 0x003 and "+
-         "instead equals {hex(language_code)}", should_exit)
+        print_error("Language code does not equal 0x001, 0x002 or 0x003 and "+
+         F"instead equals {hex(language_code)}", should_exit)
         return False
     if year >= MAX_YEAR:
         print_error(f"Year is not below 2100 as year equals {year}", 
@@ -84,7 +84,7 @@ def check_dt_response_packet(data, should_exit=False, print_data=False):
         return False
     if not(len(data) == HEADER_LENGTH + length):
         print_error(f"Invalid length, packet length = {len(data)}, "+
-        "length in header + header length = {length + 13}", should_exit)
+        f"length in header + header length = {length + 13}", should_exit)
         return False
     print("Checks passed")
     
