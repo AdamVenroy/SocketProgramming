@@ -1,5 +1,6 @@
 """Server file"""
-
+# Questions to ask: How intense do error checks have to be?
+# Packet Server Buffer?
 import sys
 import socket
 import datetime
@@ -71,7 +72,7 @@ def create_dt_reponse(language_code, request_type):
     
     text = text.encode('utf-8')
     if len(text) > TEXT_MAX_LEN:
-        print_error("Text message too long")
+        print_error("Text message too long", False)
 
     length = len(text)
 
@@ -106,16 +107,16 @@ def check_dt_request_packet(data, should_exit=False, print_data=False):
     request_type = (data[4] << 8) + data[5]
     print("Checking DT-Request packet...")
     if magic_number != MAGIC_NUMBER:
-        print_error(f"Magic number does not equal 0x497E and "+
-        "instead equals {hex(magic_number)}", should_exit)
+        print_error("Magic number does not equal 0x497E and "+
+        f"instead equals {hex(magic_number)}", should_exit)
         return False
     if packet_type != REQUEST_PACKET_TYPE:
-        print_error(f"Packet Type does not equal 0x0002 and " + 
-        "instead equals {hex(packet_type)}", should_exit)
+        print_error("Packet Type does not equal 0x0002 and " + 
+        f"instead equals {hex(packet_type)}", should_exit)
         return False
     if request_type != DATE_REQUEST and request_type != TIME_REQUEST:
-        print_error(f"Request Type does not equal 0x0001 or 0x0002 and " + 
-        "instead equals {hex(request_type)}", should_exit)
+        print_error("Request Type does not equal 0x0001 or 0x0002 and " + 
+        f"instead equals {hex(request_type)}", should_exit)
         return False
     
     print("Checks passed")
@@ -183,7 +184,6 @@ def main():
                     request_type = (packet[4] << 8) + packet[5]
                     response_packet = create_dt_reponse(language_code, 
                     request_type)
-                    print(len(response_packet))
                     print(f"Sending DT-Response packet to {address}")
                     try:
                         s.sendto(response_packet, address)

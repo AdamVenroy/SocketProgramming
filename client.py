@@ -133,7 +133,7 @@ def main():
         server_socket.connect(address)
         server_socket.sendto(packet, address)
     except Exception as e:
-        print("Failed to packet to address")
+        print("Failed to send packet to address")
         print_error(e, True)
 
     print("Waiting for response packet...")
